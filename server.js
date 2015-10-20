@@ -24,6 +24,19 @@ var FalcorServer = require('falcor-express'),
                     }
                 })
                 return results
+            },
+            set: (jsonGraphArg) => {
+                var namesById = jsonGraphArg.names,
+                    ids = Object.keys(namesById),
+                    results = []
+                ids.forEach(id => {
+                    data.names[id].name = namesById[id].name
+                    results.push({
+                        path: ['names', id, 'name'],
+                        value: namesById[id]
+                    })
+                })
+                return results
             }
         },
         {
