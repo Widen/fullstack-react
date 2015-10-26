@@ -5,35 +5,53 @@ var FalcorServer = require('falcor-express'),
     app = express(),
     data = {
         names: [
-            {name: 'a'},
-            {name: 'b'},
-            {name: 'c'}
-        ]
+            {id: 0},
+            {id: 1},
+            {id: 2}
+        ],
+        namesByIds: {
+            "0": {name: 'a'},
+            "1": {name: 'b'},
+            "2": {name: 'c'}
+        }
     },
     NamesRouter = Router.createClass([
         {
-            route: 'names[{integers:nameIndexes}]["name"]',
+            route: 'names[{integers:nameIndexes}]',
             get: (pathSet) => {
                 var results = [];
                 pathSet.nameIndexes.forEach(nameIndex => {
                     if (data.names.length > nameIndex) {
                         results.push({
-                            path: ['names', nameIndex, 'name'],
-                            value: data.names[nameIndex].name
+                            path: ['names', nameIndex],
+                            value: {$type: 'ref', value: ['namesById', data.names[nameIndex].id]}
                         })
                     }
                 })
                 return results
+            }
+        },
+        {
+            route: 'namesById[{integers:nameIds}]["name"]',
+            get: (pathSet) => {
+                var results = [];
+                pathSet.nameIds.forEach(nameId => {
+                    results.push({
+                        path: ['namesById', nameId, 'name'],
+                        value: data.namesByIds[nameId].name
+                    })
+                })
+                return results
             },
             set: (jsonGraphArg) => {
-                var namesById = jsonGraphArg.names,
+                var namesById = jsonGraphArg.namesById,
                     ids = Object.keys(namesById),
                     results = []
                 ids.forEach(id => {
-                    data.names[id].name = namesById[id].name
+                    data.namesByIds[id].name = namesById[id].name
                     results.push({
-                        path: ['names', id, 'name'],
-                        value: namesById[id]
+                        path: ['namesById', id, 'name'],
+                        value: namesById[id].name
                     })
                 })
                 return results
@@ -48,13 +66,19 @@ var FalcorServer = require('falcor-express'),
         {
             route: 'names.add',
             call: (callPath, args) => {
-                var newName = args[0];
+                var newId = data.names.length,
+                    newName = args[0];
 
-                data.names.push({name: newName})
+                data.names.push({id:newId});
+                data.namesByIds[newId] = {name: newName};
 
                 return [
                     {
-                        path: ['names', data.names.length-1, 'name'],
+                        path: ['names', data.names.length-1],
+                        value: {$type: 'ref', value: ['namesById', newId]}
+                    },
+                    {
+                        path: ['namesById', newId, 'name'],
                         value: newName
                     },
                     {
@@ -62,6 +86,54 @@ var FalcorServer = require('falcor-express'),
                         value: data.names.length
                     }
                 ]
+            }
+        },
+        {
+            route: 'names.up',
+            call: (callPath, args) => {
+                var currentIndex = args[0];
+                if (currentIndex < data.names.length && currentIndex > 0) {
+                    var upIndex = parseInt(currentIndex, 10) - 1,
+                        idToUp = data.names[currentIndex].id,
+                        idToDown = data.names[upIndex].id;
+
+                    data.names[currentIndex].id = idToDown;
+                    data.names[upIndex].id = idToUp;
+
+                    return [
+                        {
+                            path: ['names', currentIndex],
+                            value: {$type: 'ref', value: ['namesById', idToDown]}
+                        },{
+                            path: ['names', upIndex],
+                            value: {$type: 'ref', value: ['namesById', idToUp]}
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            route: 'names.down',
+            call: (callPath, args) => {
+                var currentIndex = args[0];
+                if (currentIndex < (data.names.length - 1) && currentIndex >= 0) {
+                    var downIndex = parseInt(currentIndex, 10) + 1,
+                        idToUp = data.names[downIndex].id,
+                        idToDown = data.names[currentIndex].id;
+
+                    data.names[currentIndex].id = idToUp;
+                    data.names[downIndex].id = idToDown;
+
+                    return [
+                        {
+                            path: ['names', currentIndex],
+                            value: {$type: 'ref', value: ['namesById', idToUp]}
+                        },{
+                            path: ['names', downIndex],
+                            value: {$type: 'ref', value: ['namesById', idToDown]}
+                        }
+                    ]
+                }
             }
         }
     ])
