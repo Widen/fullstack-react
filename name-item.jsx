@@ -31,6 +31,8 @@ class NameItem extends React.Component {
               <div>
                   <span>{this.props.name}   </span>
                   <button onClick={this.handleEditClick.bind(this)}>edit</button>
+                  <button onClick={this.handleUpClick.bind(this)}>up</button>
+                  <button onClick={this.handleDownClick.bind(this)}>down</button>
               </div>
             )
         }
@@ -41,7 +43,8 @@ class NameItem extends React.Component {
         )
     }
 
-    handleEditClick() {
+    handleEditClick(event) {
+        event.preventDefault()
         this.setState({editing: true})
     }
 
@@ -55,6 +58,23 @@ class NameItem extends React.Component {
                 this.props.update()
             })
     }
+    
+    handleUpClick(event) {
+        event.preventDefault()
+        model.call(['names','swap'],[this.props.idx, parseInt(this.props.idx)-1],['names'])
+            .then(() => {
+                this.props.update()
+            })
+    }
+    
+    handleDownClick(event) {
+        event.preventDefault()
+        model.call(['names','swap'],[this.props.idx, parseInt(this.props.idx)+1],['names'])
+            .then(() => {
+                this.props.update()
+            })
+    }
+
 }
 
 module.exports = NameItem

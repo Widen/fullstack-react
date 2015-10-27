@@ -63,6 +63,29 @@ var FalcorServer = require('falcor-express'),
                     }
                 ]
             }
+        },
+        {
+            route: 'names.swap',
+            call: (callPath, args) => {
+                var nameId1 = args[0];
+                var nameId2 = args[1];
+                if(nameId2 < 0 || nameId2 >= data.names.length) {
+                    return {path: ['names', 'length'], value: data.names.length}
+                }
+                var tmpName = data.names[nameId1].name;
+                data.names[nameId1].name = data.names[nameId2].name
+                data.names[nameId2].name = tmpName
+                return [
+                    {
+                        path: ['names', nameId1, 'name'],
+                        value: data.names[nameId1].name
+                    },
+                    {
+                        path: ['names', nameId2, 'name'],
+                        value: data.names[nameId2].name
+                    }
+                ]
+            }
         }
     ])
 
