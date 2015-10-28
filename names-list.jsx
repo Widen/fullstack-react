@@ -1,5 +1,6 @@
 var React = require('react'),
-    model = require('./model.js');
+    model = require('./model.js'),
+    NameItem = require('./name-item.jsx');
 
 class NamesList extends React.Component {
     constructor() {
@@ -13,7 +14,7 @@ class NamesList extends React.Component {
 
     render() {
         var names = Object.keys(this.state.names).map(idx => {
-            return <li key={idx}>{this.state.names[idx].name}</li>
+            return <NameItem key={idx} idx={idx} update={this.update.bind(this)} name={this.state.names[idx].name}/>
         })
         return (
             <ul>{names}</ul>

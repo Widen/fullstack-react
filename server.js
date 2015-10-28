@@ -24,6 +24,19 @@ var FalcorServer = require('falcor-express'),
                     }
                 })
                 return results
+            },
+            set: (jsonGraphArg) => {
+                var namesById = jsonGraphArg.names,
+                    ids = Object.keys(namesById),
+                    results = []
+                ids.forEach(id => {
+                    data.names[id].name = namesById[id].name
+                    results.push({
+                        path: ['names', id, 'name'],
+                        value: namesById[id]
+                    })
+                })
+                return results
             }
         },
         {
@@ -47,6 +60,32 @@ var FalcorServer = require('falcor-express'),
                     {
                         path: ['names', 'length'],
                         value: data.names.length
+                    }
+                ]
+            }
+        },
+        {
+            route: 'names.swap',
+            call: (callPath, args) => {
+                var idx1 = args[0];
+                var idx2 = args[1];
+                if(idx1 < 0 || idx1 >= data.names.length) {
+                    return {path: ['names', 'length'], value: data.names.length}
+                }
+                if(idx2 < 0 || idx2 >= data.names.length) {
+                    return {path: ['names', 'length'], value: data.names.length}
+                }
+                var tmpName = data.names[idx1].name;
+                data.names[idx1].name = data.names[idx2].name
+                data.names[idx2].name = tmpName
+                return [
+                    {
+                        path: ['names', idx1, 'name'],
+                        value: data.names[idx1].name
+                    },
+                    {
+                        path: ['names', idx2, 'name'],
+                        value: data.names[idx2].name
                     }
                 ]
             }
