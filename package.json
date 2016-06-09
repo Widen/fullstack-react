@@ -29,19 +29,29 @@
     "karma-phantomjs-launcher": "1.0.0",
     "karma-spec-reporter": "0.0.24",
     "karma-webpack": "1.7.0",
+    "npm-run-all": "^2.1.1",
     "phantomjs-prebuilt": "2.1.4",
     "rewire": "2.5.1",
     "webdriverio": "4.0.3",
     "webpack": "1.12.13"
   },
   "scripts": {
-    "start": "npm install; npm run webpack; node server",
-    "setup-webdriver": "(mkdir server/test/bin; cd server/test/bin; curl -O http://selenium-release.storage.googleapis.com/2.51/selenium-server-standalone-2.51.0.jar server/test)",
-    "start-webdriver": "java -jar server/test/bin/selenium-server-standalone-2.51.0.jar",
+    "start": "npm i && npm-run-all webpack node-server",
+    "node-server": "node server",
+    "node-server-bg": "npm run node-server &",
+    "webdriver:prestart": "npm-run-all webpack node-server-bg",
+    "webdriver:mkdir": "mkdir -p server/test/bin",
+    "webdriver:wget": "(ls ./server/test/bin/selenium.jar) || wget -O ./server/test/bin/selenium.jar http://selenium-release.storage.googleapis.com/2.51/selenium-server-standalone-2.51.0.jar",
+    "webdriver:stopIfRunning": "(curl -XGET 'http://localhost:4444/selenium-server/driver/?cmd=shutDownSeleniumServer') | true",
+    "webdriver:run": "java -jar server/test/bin/selenium.jar &",
+    "pretest": "npm-run-all webdriver:*",
     "test-client": "karma start config/karma.conf.js",
     "test-integration": "node server/test/integration",
     "test-server": "jasmine JASMINE_CONFIG_PATH=config/jasmine.json",
-    "test": "npm run test-client; npm run test-server",
+    "test": "npm-run-all test-client test-server",
+    "posttest": "npm-run-all shutdown:*",
+    "shutdown:node": "(sleep 1 && pkill node; pkill node) | true",
+    "shutdown:java": "npm run webdriver:stopIfRunning",
     "webpack": "webpack --config config/webpack.config.js"
   }
 }
